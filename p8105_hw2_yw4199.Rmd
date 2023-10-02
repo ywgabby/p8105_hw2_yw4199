@@ -90,6 +90,17 @@ three_tidy =
 view(three_tidy)
 ```
 
+Description of the data
+```{r}
+sum_weight_Professor = filter(three_tidy, name_sheet == "Professor Trash Wheel")
+sum_gwy = filter(three_tidy, 
+                 month == "July", year == 2021, name_sheet =="Gwynnda Trash Wheel")
+```
+
+
+This new dataset contains `r nrow(three_tidy)` rows, and `r ncol(three_tidy)` columns. The columns in this dataset include: `r names(three_tidy)`. The total weight of trash collected by Professor Trash Wheel is `r sum(sum_weight_Professor$weight_tons)`. The total number of cigarette butts collected by Gwynnda in July of 2021 is `r sum(sum_gwy$cigarette_butts)`.
+
+
 Problem 3
 ```{r}
 
