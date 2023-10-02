@@ -4,7 +4,7 @@ author: "Yaduo Wang"
 date: "2023-10-01"
 output: github_document
 ---
-Problem 2
+#Problem 2
 
 ```{r}
 library(tidyverse)
@@ -101,8 +101,50 @@ sum_gwy = filter(three_tidy,
 This new dataset contains `r nrow(three_tidy)` rows, and `r ncol(three_tidy)` columns. The columns in this dataset include: `r names(three_tidy)`. The total weight of trash collected by Professor Trash Wheel is `r sum(sum_weight_Professor$weight_tons)`. The total number of cigarette butts collected by Gwynnda in July of 2021 is `r sum(sum_gwy$cigarette_butts)`.
 
 
-Problem 3
+#Problem 3
 ```{r}
+#Import data and clean data
+amyloid_data = 
+  read_csv(file = "mci_amyloid.csv", skip = 1) |> 
+  janitor::clean_names() |> 
+  rename("id" = "study_id") |> 
+  drop_na(baseline) |> 
+  filter(baseline!="Na")
+view(amyloid_data)  
 
+baseline_data = 
+  read_csv(file = "MCI_baseline.csv", skip = 1)|>
+  janitor::clean_names() |> 
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        0 ~ "female"),
+    sex = as.factor(sex)) |> 
+   mutate(
+    apoe4 = 
+      case_match(
+        apoe4, 
+        1 ~ "APOE4 carrier", 
+        0 ~ "APOE4 non-carrier"),
+    apoe4 = as.factor(apoe4))
+view(baseline_data)
+```
+
+First, we import data in the form of csv file, and we dropped the first row. We use reasonable variable names.
+
+How many participants were recruited, and of these how many develop MCI? What is the average baseline age? What proportion of women in the study are APOE4 carriers?
+```{r}
+#Calculate how many participants recruited.
+nrow(baseline_data)
+```
+
+```{r}
+#develop MCI
+develop_MCI = 
+  baseline_data |> 
+  filter(age_at_onset != "." )
+view(age_at_onset)
 ```
 
