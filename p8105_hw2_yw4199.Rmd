@@ -4,6 +4,7 @@ author: "Yaduo Wang"
 date: "2023-10-01"
 output: github_document
 ---
+
 #Problem 2
 
 ```{r}
@@ -91,6 +92,7 @@ view(three_tidy)
 ```
 
 Description of the data
+
 ```{r}
 sum_weight_Professor = filter(three_tidy, name_sheet == "Professor Trash Wheel")
 sum_gwy = filter(three_tidy, 
@@ -103,48 +105,73 @@ This new dataset contains `r nrow(three_tidy)` rows, and `r ncol(three_tidy)` co
 
 #Problem 3
 ```{r}
-#Import data and clean data
-amyloid_data = 
-  read_csv(file = "mci_amyloid.csv", skip = 1) |> 
-  janitor::clean_names() |> 
-  rename("id" = "study_id") |> 
-  drop_na(baseline) |> 
-  filter(baseline!="Na")
-view(amyloid_data)  
-
-baseline_data = 
+#Import and clean the dataset. 
+baseline_initial = 
   read_csv(file = "MCI_baseline.csv", skip = 1)|>
-  janitor::clean_names() |> 
-  mutate(
-    sex = 
+  janitor::clean_names()
+
+#tidy the dataset
+baseline_data = 
+  baseline_initial |> 
+  mutate(sex = 
       case_match(
         sex, 
         1 ~ "male", 
         0 ~ "female"),
     sex = as.factor(sex)) |> 
-   mutate(
-    apoe4 = 
+   mutate(apoe4 = 
       case_match(
         apoe4, 
         1 ~ "APOE4 carrier", 
         0 ~ "APOE4 non-carrier"),
-    apoe4 = as.factor(apoe4))
+    apoe4 = as.factor(apoe4)) |> 
+  #appropriate encoded of sex and APOE4 carrier status
+  subset(current_age < age_at_onset | age_at_onset == ".") 
+  #remove any participants who do not meet the stated inclusion criteria
 view(baseline_data)
-```
 
-First, we import data in the form of csv file, and we dropped the first row. We use reasonable variable names.
-
-How many participants were recruited, and of these how many develop MCI? What is the average baseline age? What proportion of women in the study are APOE4 carriers?
-```{r}
-#Calculate how many participants recruited.
-nrow(baseline_data)
-```
-
-```{r}
-#develop MCI
-develop_MCI = 
+baseline_data_onset = 
   baseline_data |> 
-  filter(age_at_onset != "." )
-view(age_at_onset)
+  filter(age_at_onset != ".") |> 
+  view()
 ```
+
+```{r}
+APOE4_carriers = 
+  baseline_data |> 
+  filter(apoe4 == "APOE4 carrier") 
+
+```
+
+
+First, we import data in the form of csv file, and we dropped the first row. We use reasonable variable names. We apply the appropriate encoded for sex and APOE4 carrier status variables. Then, we remove any participants whose current_age is larger than age_at_onset. There are`r nrow(baseline_initial)` participants recruited, and `r nrow(baseline_data)` participants who meet the stated inclusion criteria. There are `r nrow(baseline_data_onset)` participants develop MCI. The average baseline age is `r mean(as.numeric(baseline_data_onset$age_at_onset))`. The proportion of women in the study who are APOE4 carriers is `r nrow(APOE4_carriers)/nrow(baseline_data)`. 
+
+
+```{r}
+amyloid_data = 
+  read_csv(file = "mci_amyloid.csv", skip = 1) |> 
+  janitor::clean_names() |> 
+  rename("id" = "study_id") |> 
+  drop_na() |> 
+  filter(baseline!="Na") |> 
+  pivot_longer(
+    baseline:time_8,
+    names_to = "period", 
+    values_to = "values") |> 
+  view()  
+```
+
+```{r}
+unique_baseline <- setdiff(baseline_data$id, amyloid_data$id)
+unique_biomarker <- setdiff(amyloid_data$id, baseline_data$id)
+```
+
+Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings. Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained, and briefly describe the resulting dataset; export the result as a CSV to your data directory.
+
+```{r}
+combined_data <- merge(baseline_data, amyloid_data, by = "id", all = FALSE)
+write.csv(combined_data, "combined_dataset.csv", row.names = FALSE)
+```
+
+
 
