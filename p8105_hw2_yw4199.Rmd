@@ -5,19 +5,18 @@ date: "2023-10-01"
 output: github_document
 ---
 
-#Problem 2
+# Problem 2
 
-```{r}
+```{r,message = FALSE}
 library(tidyverse)
 library(readxl)
 ```
 
-```{r}
+```{r,message = FALSE}
 trash_data = read_excel("Trash_Collection_uodated.xlsx", sheet = 1, skip = 1)
 #specify the sheet in the Excel file and to omit non-data entries
 trash_data = janitor::clean_names(trash_data)
 #use reasonable variable names
-view(trash_data)
 
 Mr.trash = 
   trash_data |> 
@@ -34,7 +33,6 @@ Pro_data = read_excel("Trash_Collection_uodated.xlsx", sheet = 2, skip = 1)
 #specify the sheet in the Excel file and to omit non-data entries
 Pro_data = janitor::clean_names(Pro_data)
 #use reasonable variable names
-view(Pro_data)
 
 Pro.trash = 
   Pro_data |> 
@@ -43,7 +41,6 @@ Pro.trash =
 #omit rows that do not include dumpster-specific data
   mutate(homes_powered = weight_tons*500/30)
 #Update the data to include a new homes_powered variable based on this calculation.
-view(Pro.trash)
 ```
 
 ```{r}
@@ -51,7 +48,6 @@ Gwy_data = read_excel("Trash_Collection_uodated.xlsx", sheet = 4, skip = 1)
 #specify the sheet in the Excel file and to omit non-data entries
 Gwy_data = janitor::clean_names(Gwy_data)
 #use reasonable variable names
-view(Gwy_data)
 
 Gwy.trash = 
   Gwy_data |> 
@@ -60,7 +56,6 @@ Gwy.trash =
 #omit rows that do not include dumpster-specific data
   mutate(homes_powered = weight_tons*500/30)
 #Update the data to include a new homes_powered variable based on this calculation.
-view(Gwy.trash)
 ```
 
 Combine all three datasets.
@@ -68,18 +63,19 @@ Combine all three datasets.
 #add an additional variable to all datasets before combining
 Mr.trash = 
   Mr.trash |> 
-  mutate(name_sheet = "Mr.Trash Wheel")
+  mutate(name_sheet = "Mr.Trash Wheel",
+         year = as.numeric(year))
 Pro.trash = 
   Pro.trash |> 
-  mutate(name_sheet = "Professor Trash Wheel") 
+  mutate(name_sheet = "Professor Trash Wheel",
+         year = as.numeric(year)) 
 Gwy.trash = 
   Gwy.trash |> 
-  mutate(name_sheet = "Gwynnda Trash Wheel") 
+  mutate(name_sheet = "Gwynnda Trash Wheel",
+         year = as.numeric(year)) 
 
 #keep the variable type constant
-Mr.trash$year = as.numeric(Mr.trash$year)
-Pro.trash$year = as.numeric(Pro.trash$year)
-Gwy.trash$year = as.numeric(Gwy.trash$year)
+
 ```
 
 ```{r}
@@ -87,7 +83,6 @@ Gwy.trash$year = as.numeric(Gwy.trash$year)
 three_tidy = 
   bind_rows(Mr.trash, Pro.trash, Gwy.trash) |>
   janitor::clean_names()
-view(three_tidy)
 ```
 
 Description of the data
@@ -99,11 +94,11 @@ sum_gwy = filter(three_tidy,
 ```
 
 
-This new dataset contains `r nrow(three_tidy)` rows, and `r ncol(three_tidy)` columns. The columns in this dataset include: `r names(three_tidy)`. The total weight of trash collected by Professor Trash Wheel is `r sum(sum_weight_Professor$weight_tons)`. The total number of cigarette butts collected by Gwynnda in July of 2021 is `r sum(sum_gwy$cigarette_butts)`.
+This new dataset contains `r nrow(three_tidy)` rows, and `r ncol(three_tidy)` columns. The columns in this dataset include: `r names(three_tidy)`. The total weight of trash collected by Professor Trash Wheel is `r sum(pull(sum_weight_Professor,weight_tons))`. The total number of cigarette butts collected by Gwynnda in July of 2021 is `r sum(pull(sum_gwy,cigarette_butts))`.
 
 
-#Problem 3
-```{r}
+# Problem 3
+```{r,message = FALSE}
 #Import and clean the dataset. 
 baseline_initial = 
   read_csv(file = "MCI_baseline.csv", skip = 1)|>
@@ -127,12 +122,10 @@ baseline_data =
   #appropriate encoded of sex and APOE4 carrier status
   subset(current_age < age_at_onset | age_at_onset == ".") 
   #remove any participants who do not meet the stated inclusion criteria
-view(baseline_data)
 
 baseline_data_onset = 
   baseline_data |> 
-  filter(age_at_onset != ".") |> 
-  view()
+  filter(age_at_onset != ".") 
 ```
 
 ```{r}
@@ -143,10 +136,10 @@ APOE4_carriers =
 ```
 
 
-First, we import data in the form of csv file, and we dropped the first row. We use reasonable variable names. We apply the appropriate encoded for sex and APOE4 carrier status variables. Then, we remove any participants whose current_age is larger than age_at_onset. There are`r nrow(baseline_initial)` participants recruited, and `r nrow(baseline_data)` participants who meet the stated inclusion criteria. There are `r nrow(baseline_data_onset)` participants develop MCI. The average baseline age is `r mean(as.numeric(baseline_data$current_age))`. The proportion of women in the study who are APOE4 carriers is `r nrow(APOE4_carriers)/nrow(baseline_data) *100`%. 
+First, we import data in the form of csv file, and we dropped the first row. We use reasonable variable names. We apply the appropriate encoded for sex and APOE4 carrier status variables. Then, we remove any participants whose current_age is larger than age_at_onset. There are`r nrow(baseline_initial)` participants recruited, and `r nrow(baseline_data)` participants who meet the stated inclusion criteria. There are `r nrow(baseline_data_onset)` participants develop MCI. The average baseline age is `r mean(as.numeric(pull(baseline_data,current_age)))`. The proportion of women in the study who are APOE4 carriers is `r nrow(APOE4_carriers)/nrow(baseline_data) *100`%. 
 
 
-```{r}
+```{r,message = FALSE}
 amyloid_data = 
   read_csv(file = "mci_amyloid.csv", skip = 1) |> 
   janitor::clean_names() |> 
@@ -155,36 +148,33 @@ amyloid_data =
   pivot_longer(
     baseline:time_8,
     names_to = "period", 
-    values_to = "values") |> 
-  view()  
+    values_to = "values") 
 ```
 
 We read in the dataset and skip the first line. We rename the student id and filter out the unnecessary data. Then, we use the pivot_longer the rearrange the dataset. 
 
-```{r}
+```{r,message = FALSE}
 unique_baseline = anti_join(baseline_data, amyloid_data)
 unique_amyloid = anti_join(amyloid_data, baseline_data)
-nrow(unique_baseline)
-nrow(unique_amyloid)/5
 ```
 
-9 participants appear in only the baseline and 15 participants only appear in amyloid datasets. There are total 470 participants.
 
-```{r}
+```{r,message = FALSE}
 #Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained.
 combined_data <- inner_join(baseline_data, amyloid_data, by = "id")
-length(unique(combined_data$id))
 # export the result as a CSV to my data directory
 write.csv(combined_data, "combined_dataset.csv", row.names = FALSE)
 
 ```
 
+`r nrow(unique_baseline)` participants appear in only the baseline and `r nrow(unique_amyloid)/5` participants only appear in amyloid datasets. There are total `r length(unique(pull(combined_data,id)))` participants.
 
-### Problem 1
+
+# Problem 1
 
 We clean the 538 `pols` data, which provides information on the number of national politicians who are democratic or republican at any given time. There are some values for which `prez_gop` is `2` -- these are months in which Ford became President following Nixon's resignation. In the new `president` variable created as part of our data cleaning, we code these as `gop` (same as values when `prez_gop` is `1`).
 
-```{r clean_538_pols}
+```{r clean_538_pols, message = FALSE}
 month_df = 
   tibble(
     month_num = 1:12,
@@ -203,7 +193,7 @@ pols =
 
 We also clean the 538 `snp` data, which contains information related to Standard & Poor’s stock market index.
 
-```{r clean_538_snp}
+```{r clean_538_snp, message = FALSE}
 snp = 
   read_csv(
     "snp.csv",
@@ -217,7 +207,7 @@ snp =
 
 Finally, we tidy the `unemployment` data so that it can be merged with the `pols` and `snp` datasets.
 
-```{r clean_538_unemp}
+```{r clean_538_unemp, message = FALSE}
 unemployment = 
   read_csv("unemployment.csv") |>
   rename(year = Year) |>
@@ -232,12 +222,11 @@ unemployment =
 
 Now we merge the three datasets!
 
-```{r merge_538}
+```{r merge_538, message = FALSE}
 data_538 = 
   left_join(pols, snp) |>
   left_join(x = _, y = unemployment)
 
-str(data_538)
 ```
 
 Notice that there are some `NA` values in the `close` and `unemployment` variables, which indicate that the value of these variables is missing at those locations.
